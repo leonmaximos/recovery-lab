@@ -1,0 +1,427 @@
+<Window x:Class="RecoveryLab.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:RecoveryLab"
+        Title="RecoveryLab" Width="1320" Height="850" MinWidth="1080" MinHeight="700"
+        WindowStartupLocation="CenterScreen" ThemeMode="Dark" Language="pt-BR"
+        Background="{StaticResource Canvas}" Foreground="{StaticResource Ink}"
+        FontFamily="{StaticResource InterfaceFont}" FontSize="13" UseLayoutRounding="True">
+    <Window.Resources>
+        <Style x:Key="StatusDot" TargetType="Ellipse">
+            <Setter Property="Fill" Value="{StaticResource Muted}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static local:AnalysisState.Reading}">
+                    <Setter Property="Fill" Value="{StaticResource Accent}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static local:AnalysisState.Complete}">
+                    <Setter Property="Fill" Value="{StaticResource Accent}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static local:AnalysisState.Warnings}">
+                    <Setter Property="Fill" Value="{StaticResource Warning}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static local:AnalysisState.Failed}">
+                    <Setter Property="Fill" Value="{StaticResource Danger}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource Canvas}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="58" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Background="{StaticResource Inset}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
+            <DockPanel Margin="25,0" LastChildFill="False">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="35" Height="35" CornerRadius="9" Background="{StaticResource AccentSoft}">
+                        <Grid Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Path Data="M 1 3 H 14 L 18 7 V 16 H 1 Z" Stroke="{StaticResource Accent}"
+                                  StrokeThickness="1.5" StrokeLineJoin="Round" />
+                            <Path Data="M 1 8 H 18 M 4 12 H 8 M 12 12 H 15" Stroke="{StaticResource Accent}"
+                                  StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        </Grid>
+                    </Border>
+                    <TextBlock Text="RecoveryLab" FontSize="17" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="11,0,0,0" />
+                </StackPanel>
+
+                <Border DockPanel.Dock="Right" VerticalAlignment="Center" CornerRadius="12" Padding="10,5"
+                        BorderBrush="{StaticResource Line}" BorderThickness="1" Background="{StaticResource Control}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72E;" Style="{StaticResource Icon}" FontSize="11"
+                                   Foreground="{StaticResource Accent}" Margin="0,0,6,0" />
+                        <TextBlock Text="Somente leitura" FontSize="11.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="25,18,25,23">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Margin="0,0,0,17">
+                <TextBlock Text="Análise da MFT" FontSize="32" FontWeight="SemiBold" />
+                <TextBlock Text="Inspeção dos primeiros 64 clusters da Tabela Mestra de Arquivos do NTFS."
+                           Style="{StaticResource MutedText}" FontSize="13" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="15,12" Margin="0,0,0,12" MinHeight="94">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.16*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid IsEnabled="{Binding CanChooseVolume}" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="VolumeLabel" Text="Volume NTFS" FontSize="12" FontWeight="SemiBold"
+                                   Margin="0,0,0,6" />
+                        <ComboBox Grid.Row="1" Style="{StaticResource Choice}" ItemsSource="{Binding Volumes}"
+                                  SelectedItem="{Binding SelectedVolume}"
+                                  AutomationProperties.LabeledBy="{Binding ElementName=VolumeLabel}"
+                                  AutomationProperties.AutomationId="VolumeChoice" ToolTip="{Binding VolumeHint}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource ActionButton}" Width="38" Padding="0"
+                                Margin="7,0,9,0" Command="{Binding RefreshVolumesCommand}" ToolTip="Atualizar volumes"
+                                AutomationProperties.Name="Atualizar volumes" AutomationProperties.AutomationId="RefreshVolumes">
+                            <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" />
+                        </Button>
+                        <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource PrimaryButton}"
+                                Command="{Binding AnalyzeCommand}" AutomationProperties.AutomationId="Analyze">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="13"
+                                           Foreground="{StaticResource AccentInk}" Margin="0,0,7,0" />
+                                <TextBlock Text="Iniciar análise" Foreground="{StaticResource AccentInk}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Border Grid.Column="1" Width="1" Background="{StaticResource Line}" Margin="21,2" />
+
+                    <Grid Grid.Column="2" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,8,0"
+                                         Style="{StaticResource StatusDot}" />
+                                <TextBlock Text="{Binding StatusTitle}" FontWeight="SemiBold"
+                                           AutomationProperties.AutomationId="AnalysisStatus" AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding StatusDetail}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                                       AutomationProperties.AutomationId="AnalysisMessage" />
+                        </StackPanel>
+                        <ProgressBar Grid.Row="1" Height="3" VerticalAlignment="Bottom"
+                                     Background="{StaticResource Line}" Foreground="{StaticResource Accent}"
+                                     IsIndeterminate="{Binding IsIndeterminate}" Maximum="{Binding ProgressMaximum}"
+                                     Value="{Binding ProgressValue, Mode=OneWay}"
+                                     Visibility="{Binding IsAnalyzing, Converter={StaticResource VisibleWhenTrue}}"
+                                     AutomationProperties.Name="Progresso da análise" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding Metrics}" Margin="-5,0,-5,14">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="5" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="5,0" Padding="12,11" MinHeight="75"
+                                ToolTip="{Binding Description}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource AccentSoft}"
+                                        VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding Glyph}" Style="{StaticResource Icon}"
+                                               Foreground="{StaticResource Accent}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Value}" FontSize="23" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="310" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" ClipToBounds="True">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="14,12,14,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="158" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Registros da MFT" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Grid.Column="1" Text="{Binding ResultCount}" Style="{StaticResource MutedText}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       AutomationProperties.AutomationId="ResultCount" />
+
+                            <Border Grid.Row="1" Margin="0,10,8,0" CornerRadius="7" BorderThickness="1">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource Control}" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="33" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="&#xE721;" Style="{StaticResource Icon}" FontSize="14"
+                                               Foreground="{StaticResource Muted}" IsHitTestVisible="False" />
+                                    <TextBox x:Name="SearchInput" Grid.Column="1" Height="36" Style="{StaticResource SearchBox}"
+                                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Buscar por nome" AutomationProperties.AutomationId="Search" />
+                                    <TextBlock Grid.Column="1" Text="Buscar por nome" VerticalAlignment="Center" IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchInput}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Style="{StaticResource Choice}"
+                                      ItemsSource="{Binding Filters}" SelectedItem="{Binding SelectedFilter}"
+                                      AutomationProperties.Name="Filtrar por status" AutomationProperties.AutomationId="StatusFilter">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <DataGrid ItemsSource="{Binding Records}" SelectedItem="{Binding SelectedRecord}"
+                                      AutomationProperties.Name="Registros da MFT" AutomationProperties.AutomationId="MftRecords"
+                                      IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="Column" RowHeight="38"
+                                      SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False"
+                                      CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="False"
+                                      CanUserResizeRows="False" CanUserSortColumns="True" Background="{StaticResource Surface}"
+                                      BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource RowLine}"
+                                      ColumnHeaderStyle="{StaticResource TableHeader}" RowStyle="{StaticResource TableRow}"
+                                      CellStyle="{StaticResource TableCell}" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                                      VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto" FontSize="12">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Registro" Binding="{Binding Number}" Width="65" ElementStyle="{StaticResource SecondaryCellText}" />
+                                    <DataGridTemplateColumn Header="Nome" SortMemberPath="Name" Width="*" MinWidth="117">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="22" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Viewbox Width="13" Height="13" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <Path Stroke="{StaticResource Muted}" StrokeThickness="1.2" StrokeLineJoin="Round">
+                                                            <Path.Style>
+                                                                <Style TargetType="Path">
+                                                                    <Setter Property="Data" Value="M 2 1 H 9 L 13 5 V 15 H 2 Z M 9 1 V 5 H 13" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                                                            <Setter Property="Data" Value="M 1 4 H 6 L 8 6 H 15 V 14 H 1 Z" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                    </Viewbox>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource CellText}"
+                                                               FontWeight="SemiBold" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Status" SortMemberPath="InUse" Width="109">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border HorizontalAlignment="Left" CornerRadius="8" Padding="7,3">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoft}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding InUse}" Value="False">
+                                                                    <Setter Property="Background" Value="{StaticResource WarningSoft}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                                <Setter Property="Foreground" Value="{StaticResource Accent}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding InUse}" Value="False">
+                                                                        <Setter Property="Foreground" Value="{StaticResource Warning}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Tipo" Binding="{Binding Type}" Width="76" ElementStyle="{StaticResource SecondaryCellText}" />
+                                    <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText}" SortMemberPath="Size"
+                                                        Width="83" ElementStyle="{StaticResource SecondaryCellText}" />
+                                    <DataGridTextColumn Header="Modificado (UTC)" Binding="{Binding ModifiedText}" SortMemberPath="Modified"
+                                                        Width="122" ElementStyle="{StaticResource SecondaryCellText}" />
+                                    <DataGridTextColumn Header="$DATA" Binding="{Binding DataSummary}" Width="99" ElementStyle="{StaticResource SecondaryCellText}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Text="{Binding EmptyMessage}" TextWrapping="Wrap" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18,36,18,0"
+                                       IsHitTestVisible="False" AutomationProperties.AutomationId="EmptyResults">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasRows}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Card}" ClipToBounds="True">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="15,12,15,5">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource Icon}" FontSize="15"
+                                       Foreground="{StaticResource Accent}" Margin="0,0,8,0" />
+                            <TextBlock Text="Inspeção" Style="{StaticResource SectionTitle}" />
+                        </StackPanel>
+
+                        <TabControl Grid.Row="1" Style="{StaticResource InspectorTabs}"
+                                    ItemContainerStyle="{StaticResource InspectorTab}"
+                                    AutomationProperties.Name="Painel de inspeção" AutomationProperties.AutomationId="Inspection">
+                            <TabItem Header="Registro" Style="{StaticResource InspectorTab}" AutomationProperties.AutomationId="RecordTab">
+                                <Grid>
+                                    <ScrollViewer x:Name="RecordInspectorScroll"
+                                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  Visibility="{Binding HasSelection, Converter={StaticResource VisibleWhenTrue}}">
+                                        <StackPanel Margin="15,11,13,0">
+                                            <TextBlock Text="{Binding SelectedRecord.Name}" FontSize="17" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap" AutomationProperties.AutomationId="SelectedRecordName" />
+                                            <TextBlock Text="{Binding SelectedRecord.Status}" Style="{StaticResource MutedText}"
+                                                       Margin="0,3,0,14" />
+                                            <ItemsControl ItemsSource="{Binding RecordDetails}" ItemTemplate="{StaticResource DetailSection}" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                    <TextBlock Text="Selecione um registro na tabela para ver os detalhes."
+                                               Margin="15" TextWrapping="Wrap">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasSelection}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="Volume" Style="{StaticResource InspectorTab}" AutomationProperties.AutomationId="VolumeTab">
+                                <Grid>
+                                    <ScrollViewer x:Name="VolumeInspectorScroll"
+                                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  Visibility="{Binding HasResult, Converter={StaticResource VisibleWhenTrue}}">
+                                        <StackPanel Margin="15,11,13,0">
+                                            <TextBlock Text="{Binding SelectedVolume.DisplayName}" FontSize="17" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap" Margin="0,0,0,13" />
+                                            <ItemsControl ItemsSource="{Binding VolumeDetails}" ItemTemplate="{StaticResource DetailSection}" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                    <TextBlock Text="Inicie uma análise para consultar a geometria do NTFS e as ocorrências."
+                                               Margin="15" TextWrapping="Wrap">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasResult}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
